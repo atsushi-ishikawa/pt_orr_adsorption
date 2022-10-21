@@ -1,4 +1,5 @@
-# aseplus
+# pt_orr_adsorption
+* Pt ORR promoted by adsorbing organic molecules
 
 ## Usage
 ### `make_adsorbed_surf.py`
