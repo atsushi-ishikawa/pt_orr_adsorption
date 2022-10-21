@@ -1,7 +1,7 @@
 # pt_orr_adsorption
 * Pt ORR promoted by adsorbing organic molecules
+* Requires openbabel
 
-## Usage
 ### `make_adsorbed_surf.py`
 * Make surface + adsorbate system, and output it to a VASP POSCAR file
  
@@ -16,3 +16,7 @@
  
 #### Example
 * `python make_adsorbed_surf.py --cif_file="Pt.cif" --adsorbate_smiles="NC1=CC=CC=C1" --rotate=y,90 --height=2.0`
+ 
+### `calc_adsorption_energy.py`
+#### Example
+* `python calc_adsorption_energy.py`
