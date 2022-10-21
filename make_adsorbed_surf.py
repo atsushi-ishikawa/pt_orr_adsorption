@@ -65,6 +65,7 @@ surf = tools.fix_lower_surface(surf)
 #
 os.system('obabel -:"{0:s}" -oxyz -h --gen3D -O tmp.xyz'.format(adsorbate_smiles))
 adsorbate = read("tmp.xyz")
+adsorbate.set_tags([-1]*len(adsorbate))
 adsorbate.center()
 adsorbate.rotate(v=rotate_dir_and_angle[0], a=int(rotate_dir_and_angle[1]))
 
@@ -81,3 +82,4 @@ if adsorbate is not None:
     add_adsorbate(surf, adsorbate, height=height, position=(0, 0), offset=offset*offset_fac)
 
 write("POSCAR", surf)
+write("surf_plus_ads.db", surf)
