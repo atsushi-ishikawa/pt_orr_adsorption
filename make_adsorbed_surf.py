@@ -7,7 +7,7 @@ from ase import Atoms
 import os
 import numpy as np
 import collections
-from tools import fix_lower_surface, sort_atoms_by
+import aseplus.tools as tools
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -51,7 +51,7 @@ surf = surface(lattice=bulk, indices=indices, layers=nlayer, vacuum=vacuum)
 surf = surf*[3, 3, 1]
 #surf = surf*[3, 2, 1]
 surf = sort(surf)
-surf = sort_atoms_by(surf, xyz="z")
+surf = tools.sort_atoms_by(surf, xyz="z")
 
 formula = surf.get_chemical_formula()
 
@@ -59,7 +59,7 @@ offset_fac = (2.1, 1.5)
 offset_fac = np.array(offset_fac)
 
 surf.translate([0, 0, -vacuum+0.5])
-surf = fix_lower_surface(surf)
+surf = tools.fix_lower_surface(surf)
 #
 # prepare adsorbate
 #
