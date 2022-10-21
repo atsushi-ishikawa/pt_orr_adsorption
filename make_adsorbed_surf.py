@@ -15,7 +15,7 @@ parser.add_argument("--cif_file")
 parser.add_argument("--adsorbate_smiles", help="smiles string for adsorbate")
 parser.add_argument("--rotate", default=None, type=str, help="x|y|z,degree")
 parser.add_argument("--height", default=None, type=float)
-parser.add_argument("--nlayer", default=4, type=int)
+parser.add_argument("--nlayer", default=3, type=int)
 parser.add_argument("--vacuum", default=10.0, type=float)
 
 args = parser.parse_args()
@@ -46,7 +46,7 @@ indices = []
 for c in facet:
     indices.append(int(c))
 bulk = read(cif_file)
-surf = surface(lattice=bulk, indices=indices, layers=nlayer, vacuum=vacuum)
+surf = surface(lattice=bulk, indices=indices, layers=nlayer, vacuum=vacuum, periodic=True)
 
 surf = surf*[3, 3, 1]
 #surf = surf*[3, 2, 1]
