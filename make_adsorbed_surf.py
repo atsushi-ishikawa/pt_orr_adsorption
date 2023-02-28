@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--cif_file")
 parser.add_argument("--adsorbate_smiles", help="smiles string for adsorbate")
 parser.add_argument("--rotate", default=None, type=str, help="x|y|z,degree")
+parser.add_argument("--rotate2", default=None, type=str, help="x|y|z,degree")
 parser.add_argument("--height", default=None, type=float)
 parser.add_argument("--nlayer", default=3, type=int)
 parser.add_argument("--vacuum", default=10.0, type=float)
@@ -27,6 +28,11 @@ if args.rotate is None:
     rotate_dir_and_angle = ["x", 0]
 else:
     rotate_dir_and_angle = [args.rotate[0], args.rotate[2:]]
+
+if args.rotate2 is None:
+    rotate_dir_and_angle2 = ["x", 0]
+else:
+    rotate_dir_and_angle2 = [args.rotate2[0], args.rotate2[2:]]
 
 if args.height is None:
     height = 4.0
@@ -68,6 +74,7 @@ adsorbate = read("tmp.xyz")
 adsorbate.set_tags([-1]*len(adsorbate))
 adsorbate.center()
 adsorbate.rotate(v=rotate_dir_and_angle[0], a=int(rotate_dir_and_angle[1]))
+adsorbate.rotate(v=rotate_dir_and_angle2[0], a=int(rotate_dir_and_angle2[1]))
 
 # shift
 min_ind = min(adsorbate.positions[2, :])
