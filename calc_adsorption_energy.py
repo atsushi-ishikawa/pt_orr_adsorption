@@ -4,6 +4,8 @@ from ase.calculators.vasp import Vasp
 from ase.optimize.bfgs import BFGS
 import numpy as np
 import os
+import argparse
+import json
 
 
 def get_vasp_setting(directory=None):
@@ -23,6 +25,7 @@ def get_vasp_setting(directory=None):
     ediffg = -5.0e-2
     kpts   = [1, 1, 1]
     ispin  = 1
+    lasph  = True
     pp     = "potpaw_PBE.54"
     npar   = 10
     nsim   = npar
@@ -38,12 +41,29 @@ def get_vasp_setting(directory=None):
     calc = Vasp(directory=directory, prec=prec, encut=encut, xc=xc, ivdw=ivdw, algo=algo, ediff=ediff, ediffg=ediffg,
                 ibrion=ibrion, potim=potim, nsw=nsw, nelm=nelm, nelmin=nelmin, kpts=kpts, ismear=ismear,
                 kgamma=True, ispin=ispin, pp=pp, npar=npar, nsim=nsim, isym=isym, lreal=lreal, lwave=lwave,
-                lcharg=lcharg, sigma=sigma, lorbit=lorbit, ldipol=ldipol, idipol=idipol)
+                lcharg=lcharg, sigma=sigma, lorbit=lorbit, lasph=lasph, ldipol=ldipol, idipol=idipol)
 
     return calc
 
-workdir = "work"
-os.makedirs(os.path.join(os.getcwd(), workdir), exist_ok=True)
+parser = argparse.ArgumentParser()
+parser.add_argument("--basedir", type=str, default="")
+parser.add_argument("--workdir", type=str, default="work")
+parser.add_argument("--worksubdir", type=str, default="")
+parser.add_argument("--jsonfile", type=str, default="result.json")
+parser.add_argument("--steps", type=int, default=200)
+args = parser.parse_args()
+
+# working directory
+workdir = os.path.join(args.basedir, args.workdir, args.worksubdir)
+if not os.path.isdir(workdir):
+    os.makedirs(workdir)
+os.chdir(workdir)
+
+# json file to write output
+jsonfile = os.path.join(args.basedir, args.jsonfile)
+if not os.path.isfile(jsonfile):
+    with open(jsonfile, "w") as f:
+        f.write("")
 
 surf_and_ads = read("surf_plus_ads.db")
 
@@ -65,19 +85,25 @@ surf.set_constraint(constraints)
 
 E = np.zeros(3)
 
-steps = 100
 for i, mol in enumerate([ads, surf, surf_and_ads]):
     directory = os.path.join(workdir, mol.get_chemical_formula())
     calc = get_vasp_setting(directory=directory)
 
     # optimization
     calc.int_params["ibrion"] = 2
-    calc.int_params["nsw"] = steps
+    calc.int_params["nsw"] = args.steps
 
     mol.set_calculator(calc)
+
+    print("calculating {:s}".format(mol.get_chemical_formula()))
 
     E[i] = mol.get_potential_energy()
 
 Eads = E[2] - (E[0] + E[1])
 print("Adsorption energy (eV) = {}".format(Eads))
+
+data = {"adsorbate": ads.get_chemical_formula(), "adsorption_energy": Eads}
+
+with open(jsonfile, "a") as f:
+    json.dump(data, f, indent=4)
 

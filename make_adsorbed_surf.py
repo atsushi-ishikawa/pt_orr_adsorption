@@ -11,18 +11,26 @@ import aseplus.tools as tools
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--cif_file")
+parser.add_argument("--cif", default=None)
 parser.add_argument("--adsorbate_smiles", help="smiles string for adsorbate")
 parser.add_argument("--rotate", default=None, type=str, help="x|y|z,degree")
 parser.add_argument("--rotate2", default=None, type=str, help="x|y|z,degree")
 parser.add_argument("--height", default=None, type=float)
 parser.add_argument("--nlayer", default=3, type=int)
 parser.add_argument("--vacuum", default=10.0, type=float)
+parser.add_argument("--basedir", default="")
+parser.add_argument("--workdir", default="work")
+parser.add_argument("--worksubdir", default="")
 
 args = parser.parse_args()
 
-cif_file = args.cif_file
+cif = args.cif
 adsorbate_smiles = args.adsorbate_smiles
+
+workdir = os.path.join(args.basedir, args.workdir, args.worksubdir)
+if not os.path.isdir(workdir):
+    os.makedirs(workdir)
+os.chdir(workdir)
 
 if args.rotate is None:
     rotate_dir_and_angle = ["x", 0]
@@ -51,7 +59,7 @@ facet   = "111"
 indices = []
 for c in facet:
     indices.append(int(c))
-bulk = read(cif_file)
+bulk = read(cif)
 surf = surface(lattice=bulk, indices=indices, layers=nlayer, vacuum=vacuum, periodic=True)
 
 surf = surf*[3, 3, 1]
@@ -90,3 +98,4 @@ if adsorbate is not None:
 
 write("POSCAR", surf)
 write("surf_plus_ads.db", surf)
+
