@@ -18,8 +18,8 @@ parser.add_argument("--rotate2", default=None, type=str, help="x|y|z_degree")
 parser.add_argument("--height", default=None, type=float)
 parser.add_argument("--nlayer", default=3, type=int)
 parser.add_argument("--vacuum", default=10.0, type=float)
-parser.add_argument("--basedir", default="", type=str)
-parser.add_argument("--workdir", default="work", type=str)
+parser.add_argument("--basedir", default=None, type=str)
+parser.add_argument("--workdir", default="", type=str)
 parser.add_argument("--worksubdir", default="", type=str)
 
 args = parser.parse_args()
@@ -27,7 +27,12 @@ args = parser.parse_args()
 cif = args.cif
 adsorbate_smiles = args.adsorbate_smiles
 
-workdir = os.path.join(args.basedir, args.workdir, args.worksubdir)
+if args.basedir is None:
+    basedir = os.getcwd()
+else:
+    basedir = args.basedir
+    
+workdir = os.path.join(basedir, args.workdir, args.worksubdir)
 if not os.path.isdir(workdir):
     os.makedirs(workdir)
 os.chdir(workdir)
@@ -84,10 +89,12 @@ adsorbate.center()
 adsorbate.rotate(v=rotate_dir_and_angle[0], a=int(rotate_dir_and_angle[1]))
 adsorbate.rotate(v=rotate_dir_and_angle2[0], a=int(rotate_dir_and_angle2[1]))
 
-# shift
-min_ind = min(adsorbate.positions[2, :])
-adsorbate.translate([0, 0, -min_ind])
-
+# make adsorbing atom as [0, 0, 0]
+adsorbate_woH = Atoms(list(filter(lambda x: x.symbol!="H", adsorbate)))  # H is not anchoring atom
+min_ind = np.argmin(adsorbate_woH.get_positions()[:,2])
+shift = adsorbate_woH.get_positions()[min_ind]
+anchor_symbol = adsorbate_woH[min_ind].symbol
+adsorbate.translate(-shift)
 #
 # adsorb on surface
 #
@@ -99,5 +106,5 @@ if adsorbate is not None:
 write("POSCAR", surf)
 
 db = connect("surf_and_ads.json")
-db.write(surf, data={"smiles": adsorbate_smiles})
+db.write(surf, data={"smiles": adsorbate_smiles, "anchoring_atom": anchor_symbol})
 
