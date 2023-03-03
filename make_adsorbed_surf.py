@@ -11,16 +11,16 @@ import aseplus.tools as tools
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--cif", default=None)
-parser.add_argument("--adsorbate_smiles", help="smiles string for adsorbate")
-parser.add_argument("--rotate", default=None, type=str, help="x|y|z,degree")
-parser.add_argument("--rotate2", default=None, type=str, help="x|y|z,degree")
+parser.add_argument("--cif", default=None, type=str)
+parser.add_argument("--adsorbate_smiles", default=None, type=str, help="smiles string for adsorbate")
+parser.add_argument("--rotate", default=None, type=str, help="x|y|z_degree")
+parser.add_argument("--rotate2", default=None, type=str, help="x|y|z_degree")
 parser.add_argument("--height", default=None, type=float)
 parser.add_argument("--nlayer", default=3, type=int)
 parser.add_argument("--vacuum", default=10.0, type=float)
-parser.add_argument("--basedir", default="")
-parser.add_argument("--workdir", default="work")
-parser.add_argument("--worksubdir", default="")
+parser.add_argument("--basedir", default="", type=str)
+parser.add_argument("--workdir", default="work", type=str)
+parser.add_argument("--worksubdir", default="", type=str)
 
 args = parser.parse_args()
 
@@ -97,5 +97,7 @@ if adsorbate is not None:
     add_adsorbate(surf, adsorbate, height=height, position=(0, 0), offset=offset*offset_fac)
 
 write("POSCAR", surf)
-write("surf_plus_ads.db", surf)
+
+db = connect("surf_and_ads.json")
+db.write(surf, data={"smiles": adsorbate_smiles})
 
