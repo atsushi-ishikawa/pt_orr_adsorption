@@ -15,7 +15,7 @@ parser.add_argument("--cif", default=None, type=str)
 parser.add_argument("--adsorbate_smiles", default=None, type=str, help="smiles string for adsorbate")
 parser.add_argument("--rotate", default=None, type=str, help="x|y|z_degree")
 parser.add_argument("--rotate2", default=None, type=str, help="x|y|z_degree")
-parser.add_argument("--height", default=None, type=float)
+parser.add_argument("--height", default=2.0, type=float)
 parser.add_argument("--nlayer", default=3, type=int)
 parser.add_argument("--vacuum", default=10.0, type=float)
 parser.add_argument("--basedir", default=None, type=str)
@@ -47,11 +47,7 @@ if args.rotate2 is None:
 else:
     rotate_dir_and_angle2 = [args.rotate2[0], args.rotate2[2:]]
 
-if args.height is None:
-    height = 4.0
-else:
-    height = args.height
-
+height = args.height
 nlayer = args.nlayer
 vacuum = args.vacuum
 
@@ -85,23 +81,21 @@ surf = tools.fix_lower_surface(surf)
 os.system('obabel -:"{0:s}" -oxyz -h --gen3D -O tmp.xyz'.format(adsorbate_smiles))
 adsorbate = read("tmp.xyz")
 adsorbate.set_tags([-1]*len(adsorbate))
-adsorbate.center()
+#adsorbate.center()
 adsorbate.rotate(v=rotate_dir_and_angle[0], a=int(rotate_dir_and_angle[1]))
 adsorbate.rotate(v=rotate_dir_and_angle2[0], a=int(rotate_dir_and_angle2[1]))
 
 # make adsorbing atom as [0, 0, 0]
 adsorbate_woH = Atoms(list(filter(lambda x: x.symbol!="H", adsorbate)))  # H is not anchoring atom
 min_ind = np.argmin(adsorbate_woH.get_positions()[:,2])
-shift = adsorbate_woH.get_positions()[min_ind]
 anchor_symbol = adsorbate_woH[min_ind].symbol
-adsorbate.translate(-shift)
 #
 # adsorb on surface
 #
 if adsorbate is not None:
     offset = (0.16, 0.33)  # x1y1
     offset = np.array(offset)
-    add_adsorbate(surf, adsorbate, height=height, position=(0, 0), offset=offset*offset_fac)
+    add_adsorbate(surf, adsorbate, height=height, position=(0, 0), offset=offset*offset_fac, mol_index=min_ind)
 
 write("POSCAR", surf)
 
