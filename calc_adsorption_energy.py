@@ -52,14 +52,19 @@ def get_vasp_setting(directory=None, gas_phase=False):
     return calc
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--basedir", type=str, default="")
-parser.add_argument("--workdir", type=str, default="work")
-parser.add_argument("--worksubdir", type=str, default="")
-parser.add_argument("--jsonfile", type=str, default="result.json")
-parser.add_argument("--steps", type=int, default=200)
+parser.add_argument("--basedir", default=None, type=str)
+parser.add_argument("--workdir", default="", type=str)
+parser.add_argument("--worksubdir", default="", type=str)
+parser.add_argument("--jsonfile", default="result.json", type=str)
+parser.add_argument("--steps", default=200, type=int)
 args = parser.parse_args()
 
-# working directory
+# directory
+if args.basedir is None:
+    basedir = os.getcwd()
+else:
+    basedir = args.basedir
+
 workdir = os.path.join(args.basedir, args.workdir, args.worksubdir)
 if not os.path.isdir(workdir):
     os.makedirs(workdir)
