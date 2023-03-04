@@ -15,16 +15,16 @@ def get_vasp_setting(directory=None, gas_phase=False):
     xc     = "pbe"
     ivdw   = 12
     nsw    = 0  # will be overwritten by steps
-    nelm   = 30
+    nelm   = 40
     nelmin = 5
     ibrion = -1
     potim  = 0.2
     algo   = "VeryFast"  # sometimes VeryFast fails
     ismear = 0
     sigma  = 0.1
-    ediff  = 1.0e-4
-    ediffg = -5.0e-2
-    kpts   = [2, 2, 1]
+    ediff  = 1.0e-5
+    ediffg = -3.0e-2
+    kpts   = [1, 1, 1]
     ispin  = 1
     lasph  = True
     pp     = "potpaw_PBE.54"
@@ -53,7 +53,7 @@ def get_vasp_setting(directory=None, gas_phase=False):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--basedir", default=None, type=str)
-parser.add_argument("--workdir", default="", type=str)
+parser.add_argument("--workdir", default="work", type=str)
 parser.add_argument("--worksubdir", default="", type=str)
 parser.add_argument("--jsonfile", default="result.json", type=str)
 parser.add_argument("--steps", default=200, type=int)
@@ -65,13 +65,13 @@ if args.basedir is None:
 else:
     basedir = args.basedir
 
-workdir = os.path.join(args.basedir, args.workdir, args.worksubdir)
+workdir = os.path.join(basedir, args.workdir, args.worksubdir)
 if not os.path.isdir(workdir):
     os.makedirs(workdir)
 os.chdir(workdir)
 
 # json file to write output
-jsonfile = os.path.join(args.basedir, args.jsonfile)
+jsonfile = os.path.join(basedir, args.jsonfile)
 if not os.path.isfile(jsonfile):
     with open(jsonfile, "w") as f:
         f.write("")
@@ -80,6 +80,7 @@ db = connect("surf_and_ads.json")
 surf_and_ads = db.get_atoms(id=1)
 row = db.get(id=1)
 smiles = row.data.smiles
+anchor = row.data.anchor_atom
 
 ads  = list(filter(lambda atom: atom.tag == -1, surf_and_ads))
 surf = list(filter(lambda atom: atom.tag != -1, surf_and_ads))
@@ -123,8 +124,8 @@ Eads = E[2] - (E[0] + E[1])
 print("Adsorption energy (eV) = {}".format(Eads))
 
 data = {"adsorbate_formula": ads.get_chemical_formula(), "adsorbate_smiles": smiles,
-        "adsorption_energy": Eads}
-
+        "anchor_atom": anchor, "adsorption_energy": Eads}
+        
 with open(jsonfile, "a") as f:
     json.dump(data, f, indent=4)
 

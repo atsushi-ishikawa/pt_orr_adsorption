@@ -16,15 +16,14 @@ PRG=/lustre0/home/n22240/vasp/vasp.5.4.4/bin/vasp_std
 
 LBL=$$
 
-BASEDIR=`pwd`
-CIF="${BASEDIR}/Pt.cif"
-STEPS=100
+CUDIR=`pwd`
+CIF=$CUDIR/"Pt.cif"
+STEPS=200
 
 vasp_script="${HOME}/ase/run_vasp.py"
 echo 
 echo "import os" > $vasp_script
 echo "exitcode = os.system(\"mpiexec.hydra -n ${NUM_PROCS} ${PRG}\")" >> $vasp_script
 
-python make_adsorbed_surf.py --cif=$CIF --basedir=$BASEDIR --worksubdir=$$ ${INP1} ${INP2} ${INP3} ${INP4}
-python calc_adsorption_energy.py --basedir=$BASEDIR --worksubdir=$$ --steps=$STEPS 1> stdout_$LBL.txt 2> stderr_$LBL.txt
-
+python make_adsorbed_surf.py --cif=$CIF --worksubdir=$$ ${INP1} ${INP2} ${INP3}
+python calc_adsorption_energy.py --worksubdir=$$ --steps=$STEPS 1> stdout_$LBL.txt 2> stderr_$LBL.txt

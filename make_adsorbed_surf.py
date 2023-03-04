@@ -3,6 +3,7 @@ from ase.calculators.emt import EMT
 from ase.db import connect
 from ase.io import read, write
 from ase.visualize import view
+from ase.geometry import get_distances
 from ase import Atoms
 import os
 import numpy as np
@@ -19,7 +20,7 @@ parser.add_argument("--height", default=2.0, type=float)
 parser.add_argument("--nlayer", default=3, type=int)
 parser.add_argument("--vacuum", default=10.0, type=float)
 parser.add_argument("--basedir", default=None, type=str)
-parser.add_argument("--workdir", default="", type=str)
+parser.add_argument("--workdir", default="work", type=str)
 parser.add_argument("--worksubdir", default="", type=str)
 
 args = parser.parse_args()
@@ -81,14 +82,21 @@ surf = tools.fix_lower_surface(surf)
 os.system('obabel -:"{0:s}" -oxyz -h --gen3D -O tmp.xyz'.format(adsorbate_smiles))
 adsorbate = read("tmp.xyz")
 adsorbate.set_tags([-1]*len(adsorbate))
-#adsorbate.center()
 adsorbate.rotate(v=rotate_dir_and_angle[0], a=int(rotate_dir_and_angle[1]))
 adsorbate.rotate(v=rotate_dir_and_angle2[0], a=int(rotate_dir_and_angle2[1]))
 
 # make adsorbing atom as [0, 0, 0]
-adsorbate_woH = Atoms(list(filter(lambda x: x.symbol!="H", adsorbate)))  # H is not anchoring atom
-min_ind = np.argmin(adsorbate_woH.get_positions()[:,2])
-anchor_symbol = adsorbate_woH[min_ind].symbol
+woH   = Atoms(list(filter(lambda x: x.symbol!="H", adsorbate)))  # adsorbate without H
+Honly = Atoms(list(filter(lambda x: x.symbol=="H", adsorbate)))
+min_ind = np.argmin(woH.get_positions()[:,2])
+
+# analyze anchoring atom
+_, length = get_distances(woH[min_ind].position, Honly.get_positions())
+anchoring_H = np.count_nonzero(length < 1.2)
+anchor_atom = woH[min_ind].symbol
+if anchoring_H != 0:
+    anchor_atom += "H" + str(anchoring_H)
+
 #
 # adsorb on surface
 #
@@ -97,8 +105,12 @@ if adsorbate is not None:
     offset = np.array(offset)
     add_adsorbate(surf, adsorbate, height=height, position=(0, 0), offset=offset*offset_fac, mol_index=min_ind)
 
-write("POSCAR", surf)
+poscar   = "POSCAR"
+jsonfile = "surf_and_ads.json"
 
-db = connect("surf_and_ads.json")
-db.write(surf, data={"smiles": adsorbate_smiles, "anchoring_atom": anchor_symbol})
+write(poscar, surf)
+db = connect(jsonfile)
+db.write(surf, data={"smiles": adsorbate_smiles, "anchor_atom": anchor_atom})
+
+os.chdir(basedir)
 
